@@ -1,0 +1,113 @@
+# Proyecto 2: Comandos EAFITos — Gestión de Memoria en xv6-riscv
+
+## Sistemas Operativos — EAFIT
+
+**Autor:** Emmanuel Hernández  
+**Profesor:** MBA, I.S. José Luis Montoya Pareja
+
+---
+
+## Descripción
+
+Extensión del sistema operativo xv6 (RISC-V) con 5 comandos de gestión de memoria que demuestran conceptos fundamentales de SO: syscalls, tabla de páginas, permisos de memoria y robustez de argumentos.
+
+Este proyecto parte de la base del Proyecto 1 (comandos básicos de shell EAFITos) e incorpora además un mecanismo de memoria compartida entre procesos.
+
+---
+
+## Comandos Implementados (Proyecto 2)
+
+### 1. `thello` — Primera syscall de punta a punta
+- Syscall `hello()` que imprime un mensaje desde el kernel y retorna 42
+- Instrumentación en `trap.c`: loguea scause, sepc y número de syscall para ecalls custom
+- **Concepto:** path completo de una syscall (user → ecall → trap → dispatcher → sys_ → retorno)
+
+### 2. `ttrace` — Mini strace por máscara
+- Syscall `trace(int mask)` que guarda una bitmask en `struct proc`
+- Al ejecutar syscalls con bit activo, el kernel imprime: pid, nombre, número, argumentos y retorno
+- **Uso:** `ttrace <mask> <comando>` (ej: `ttrace 134217728 thello`)
+- **Concepto:** trazador de syscalls, herencia de máscara en fork()
+
+### 3. `tdumpvm` — Explorar tabla de páginas
+- Syscall `dumpvm()` que llama a `vmprint()` en `kernel/vm.c`
+- Recorre la tabla de páginas Sv39 (3 niveles), imprime PTEs válidos con permisos (RWXU)
+- Muestra cambio en la tabla antes y después de `sbrk(8192)`
+- **Concepto:** layout virtual del proceso, estructura de page table
+
+### 4. `tmemro` — Permisos de memoria y page fault
+- Syscall `map_ro(void *va)` que mapea una página con `PTE_R | PTE_U` (sin W)
+- Copia un mensaje desde el kernel a la página
+- El programa lee (ok) y luego intenta escribir (provoca store page fault, scause=15)
+- **Concepto:** permisos PTE, page faults controlados, manejo de traps
+
+### 5. `tuargs` — Robustez de argumentos de syscalls
+- Prueba syscalls con fd inválidos, punteros no mapeados (0xdeadbeef)
+- Verifica que `copyin/copyout` detectan errores y retornan -1 sin kernel panic
+- Usa `trace()` para ver los argumentos crudos del trapframe
+- **Concepto:** robustez del kernel, validación de argumentos en frontera user/kernel
+
+---
+
+## Memoria Compartida (actividad complementaria)
+
+Implementación de memoria compartida entre procesos padre/hijo:
+
+- `setshm()` — activa memoria compartida en el proceso
+- `getshm()` — retorna dirección virtual de la página compartida
+- `sharedtest` — programa de prueba
+
+**Bug identificado y documentado:** en algunas ejecuciones el padre no veía el contenido escrito en memoria. La causa raíz fue que `uvmcopy()` en `fork()` copia todas las páginas del padre al hijo (incluyendo la página compartida), creando una copia independiente en lugar de compartir la misma página física. Esto provocaba que padre e hijo escribieran en páginas distintas aunque tuvieran la misma dirección virtual.
+
+---
+
+## Archivos Modificados / Creados
+
+### Kernel
+| Archivo | Cambios |
+|---------|---------|
+| `kernel/syscall.h` | Números de syscall: hello(27), trace(28), dumpvm(29), map_ro(30) |
+| `kernel/syscall.c` | Dispatch table, nombres de syscalls, lógica de tracing |
+| `kernel/sysproc.c` | sys_hello, sys_trace, sys_dumpvm, sys_map_ro |
+| `kernel/proc.h` | Campos: trace_mask, shm_va, usar_memoria_compartida |
+| `kernel/proc.c` | Herencia de trace_mask en fork(), memoria compartida en fork/freeproc |
+| `kernel/trap.c` | Debug de ecall para syscalls custom, page fault logging |
+| `kernel/vm.c` | vmprint() (recorrido 3 niveles), ismapped(), vmfault() |
+| `kernel/defs.h` | Prototipos: vmprint, ismapped, vmfault |
+| `kernel/crear_memoria_compartida.c` | Lógica de shared memory con spinlock y refcount |
+| `kernel/crear_memoria_compartida.h` | Header de memoria compartida |
+
+### User
+| Archivo | Descripción |
+|---------|-------------|
+| `user/thello.c` | Comando 1: prueba syscall hello |
+| `user/ttrace.c` | Comando 2: trazador de syscalls |
+| `user/tdumpvm.c` | Comando 3: dump de page table |
+| `user/tmemro.c` | Comando 4: página read-only + page fault |
+| `user/tuargs.c` | Comando 5: robustez de argumentos |
+| `user/sharedtest.c` | Prueba de memoria compartida |
+| `user/user.h` | Prototipos de todas las syscalls nuevas |
+| `user/usys.pl` | Generación de stubs |
+
+---
+
+## Compilación y Ejecución
+
+```bash
+make qemu
+```
+
+Dentro de xv6:
+```
+$ thello
+$ ttrace 134217728 thello
+$ tdumpvm
+$ tmemro
+$ tuargs
+$ sharedtest
+```
+
+---
+
+## Documentación Detallada
+
+Ver `DOCUMENTACION.md` para una explicación completa archivo por archivo, conceptos teóricos, el path de una syscall, y guía de cada comando con salidas esperadas.
