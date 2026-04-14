@@ -223,5 +223,6 @@ sys_map_ro(void)
     kfree(mem);
     return -1;
   }
+  p->map_ro_va = va;
   return 0;
 }

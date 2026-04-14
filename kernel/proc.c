@@ -182,6 +182,12 @@ if(p->pagetable){
     release(&shm_lock);
   }
 
+  // Unmap read-only page from map_ro syscall
+  if(p->map_ro_va){
+    uvmunmap(p->pagetable, p->map_ro_va, 1, 1);
+    p->map_ro_va = 0;
+  }
+
   proc_freepagetable(p->pagetable, p->sz);
 }
 
