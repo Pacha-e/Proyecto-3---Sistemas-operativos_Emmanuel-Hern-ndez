@@ -5,11 +5,11 @@
 int
 main(void)
 {
-  printf("=== tuargs: syscall argument robustness test ===\n\n");
+  printf("=== uargs: syscall argument robustness test ===\n\n");
 
   int mask = (1 << SYS_write) | (1 << SYS_read) | (1 << SYS_open) | (1 << SYS_hello);
   trace(mask);
-  printf("tuargs: trace mask set to 0x%x\n\n", mask);
+  printf("uargs: trace mask set to 0x%x\n\n", mask);
 
   printf("--- Test 1: hello() ---\n");
   int ret = hello();
@@ -28,6 +28,6 @@ main(void)
   ret = open((char*)0xdeadbeef, 0);
   printf("open(0xdeadbeef) returned: %d (expected -1)\n\n", ret);
 
-  printf("=== tuargs: all tests completed without kernel panic ===\n");
+  printf("=== uargs: all tests completed without kernel panic ===\n");
   exit(0);
 }

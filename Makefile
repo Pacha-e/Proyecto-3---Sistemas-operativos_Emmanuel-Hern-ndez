@@ -154,15 +154,15 @@ UPROGS=\
 	$U/_ayuda\
 	$U/_salir\
 	$U/_sharedtest\
-	$U/_thello\
-	$U/_ttrace\
-	$U/_tdumpvm\
-	$U/_tmemro\
-	$U/_tuargs\
+	$U/_hello\
+	$U/_trace\
+	$U/_dumpvm\
+	$U/_memro\
+	$U/_uargs\
 
 
-fs.img: mkfs/mkfs README $(UPROGS)
-	mkfs/mkfs fs.img README $(UPROGS)
+fs.img: mkfs/mkfs README.md $(UPROGS)
+	mkfs/mkfs fs.img README.md $(UPROGS)
 
 -include kernel/*.d user/*.d
 

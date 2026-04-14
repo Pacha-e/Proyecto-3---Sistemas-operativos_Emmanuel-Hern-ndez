@@ -11,11 +11,11 @@
 - [Descripcion](#descripcion)
 - [Compilacion y Ejecucion](#compilacion-y-ejecucion)
 - [Comandos Implementados](#comandos-implementados)
-  - [thello — Primera syscall end-to-end](#thello--primera-syscall-end-to-end)
-  - [ttrace — Mini strace por mascara](#ttrace--mini-strace-por-mascara)
-  - [tdumpvm — Explorar tabla de paginas](#tdumpvm--explorar-tabla-de-paginas)
-  - [tmemro — Permisos de memoria y page fault](#tmemro--permisos-de-memoria-y-page-fault)
-  - [tuargs — Robustez de argumentos](#tuargs--robustez-de-argumentos)
+  - [hello — Primera syscall end-to-end](#hello--primera-syscall-end-to-end)
+  - [trace — Mini strace por mascara](#trace--mini-strace-por-mascara)
+  - [dumpvm — Explorar tabla de paginas](#dumpvm--explorar-tabla-de-paginas)
+  - [memro — Permisos de memoria y page fault](#memro--permisos-de-memoria-y-page-fault)
+  - [uargs — Robustez de argumentos](#uargs--robustez-de-argumentos)
 - [Memoria Compartida](#memoria-compartida)
 - [Archivos Modificados](#archivos-modificados)
   - [Kernel](#kernel)
@@ -30,11 +30,11 @@ Extension del sistema operativo xv6 (RISC-V) con **5 comandos de gestion de memo
 
 | Concepto | Comando que lo demuestra |
 |----------|--------------------------|
-| Path completo de una syscall | `thello` |
-| Trazado de syscalls (strace) | `ttrace` |
-| Tabla de paginas Sv39 | `tdumpvm` |
-| Permisos PTE y page faults | `tmemro` |
-| Robustez user/kernel boundary | `tuargs` |
+| Path completo de una syscall | `hello` |
+| Trazado de syscalls (strace) | `trace` |
+| Tabla de paginas Sv39 | `dumpvm` |
+| Permisos PTE y page faults | `memro` |
+| Robustez user/kernel boundary | `uargs` |
 
 Este proyecto parte de la base del **Proyecto 1** (comandos basicos de shell EAFITos) e incorpora ademas un mecanismo de **memoria compartida** entre procesos.
 
@@ -49,11 +49,11 @@ make qemu
 Dentro de la shell de xv6:
 
 ```
-$ thello
-$ ttrace 134217728 thello
-$ tdumpvm
-$ tmemro
-$ tuargs
+$ hello
+$ trace 134217728 hello
+$ dumpvm
+$ memro
+$ uargs
 $ sharedtest
 ```
 
@@ -63,9 +63,9 @@ $ sharedtest
 
 ## Comandos Implementados
 
-### `thello` — Primera syscall end-to-end
+### `hello` — Primera syscall end-to-end
 
-**Archivo:** [`user/thello.c`](user/thello.c)  
+**Archivo:** [`user/hello.c`](user/hello.c)  
 **Syscall:** `hello()` → `sys_hello()` en [`kernel/sysproc.c`](kernel/sysproc.c)  
 **Numero:** `SYS_hello = 27`
 
@@ -74,24 +74,24 @@ Ejecuta una syscall completa de punta a punta. El kernel imprime un saludo y ret
 
 **Path de la syscall:**
 ```
-user/thello.c → hello() stub (ecall) → trap.c usertrap() → syscall.c dispatch → sys_hello() → return 42
+user/hello.c → hello() stub (ecall) → trap.c usertrap() → syscall.c dispatch → sys_hello() → return 42
 ```
 
 **Salida esperada:**
 ```
-thello: calling syscall hello()...
+hello: calling syscall hello()...
 [trap] pid 3: ecall from U-mode, scause=8, sepc=0x..., syscall=27
 hello: greetings from the xv6 kernel!
-thello: hello() returned 42
+hello: hello() returned 42
 ```
 
 **Concepto demostrado:** el camino completo de una syscall desde user space hasta el kernel y de vuelta: `ecall` → trap → dispatcher → handler → retorno por `a0`.
 
 ---
 
-### `ttrace` — Mini strace por mascara
+### `trace` — Mini strace por mascara
 
-**Archivo:** [`user/ttrace.c`](user/ttrace.c)  
+**Archivo:** [`user/trace.c`](user/trace.c)  
 **Syscall:** `trace(int mask)` → `sys_trace()` en [`kernel/sysproc.c`](kernel/sysproc.c)  
 **Numero:** `SYS_trace = 28`
 
@@ -100,25 +100,25 @@ Guarda una bitmask en `struct proc`. Cada vez que el proceso (o sus hijos via `f
 
 **Uso:**
 ```
-$ ttrace <mask> <comando> [args...]
+$ trace <mask> <comando> [args...]
 ```
 
 **Ejemplo — trazar `hello` (bit 27 = `1 << 27 = 134217728`):**
 ```
-$ ttrace 134217728 thello
+$ trace 134217728 hello
 ```
 
 **Salida esperada:**
 ```
-thello: calling syscall hello()...
+hello: calling syscall hello()...
 hello: greetings from the xv6 kernel!
 [trace] pid 4: syscall hello (num=27) args=(...) -> 42
-thello: hello() returned 42
+hello: hello() returned 42
 ```
 
 **Ejemplo — trazar `write` (bit 16 = `1 << 16 = 65536`):**
 ```
-$ ttrace 65536 echo hola
+$ trace 65536 echo hola
 ```
 
 **Implementacion clave** ([`kernel/syscall.c:195`](kernel/syscall.c)):
@@ -137,9 +137,9 @@ np->trace_mask = p->trace_mask;
 
 ---
 
-### `tdumpvm` — Explorar tabla de paginas
+### `dumpvm` — Explorar tabla de paginas
 
-**Archivo:** [`user/tdumpvm.c`](user/tdumpvm.c)  
+**Archivo:** [`user/dumpvm.c`](user/dumpvm.c)  
 **Syscall:** `dumpvm()` → `sys_dumpvm()` en [`kernel/sysproc.c`](kernel/sysproc.c)  
 **Numero:** `SYS_dumpvm = 29`
 
@@ -150,16 +150,16 @@ El programa muestra la tabla **antes** y **despues** de `sbrk(8192)` + touch, pa
 
 **Salida esperada:**
 ```
-=== tdumpvm: initial page table ===
+=== dumpvm: initial page table ===
 === Page table for pid 3 ===
 ..L2 pte 0: pa=0x... flags=[---]
 ....L1 pte 0: pa=0x... flags=[---]
-......L0 pte 0: pa=0x... flags=[RWXU]   ← text
-......L0 pte 1: pa=0x... flags=[RWXU]   ← data
+......L0 pte 0: pa=0x... flags=[RWXU]   <- text
+......L0 pte 1: pa=0x... flags=[RWXU]   <- data
 ...
-=== tdumpvm: allocating 8192 bytes with sbrk ===
-=== tdumpvm: page table after sbrk + touch ===
-...                                       ← 2 paginas nuevas del heap
+=== dumpvm: allocating 8192 bytes with sbrk ===
+=== dumpvm: page table after sbrk + touch ===
+...                                       <- 2 paginas nuevas del heap
 ```
 
 **Implementacion clave** ([`kernel/vm.c`](kernel/vm.c) — `vmprint()`):
@@ -173,9 +173,9 @@ Solo imprime PTEs con bit V (Valid) activo
 
 ---
 
-### `tmemro` — Permisos de memoria y page fault
+### `memro` — Permisos de memoria y page fault
 
-**Archivo:** [`user/tmemro.c`](user/tmemro.c)  
+**Archivo:** [`user/memro.c`](user/memro.c)  
 **Syscall:** `map_ro(void *va)` → `sys_map_ro()` en [`kernel/sysproc.c`](kernel/sysproc.c)  
 **Numero:** `SYS_map_ro = 30`
 
@@ -187,12 +187,12 @@ Solo imprime PTEs con bit V (Valid) activo
 
 **Salida esperada:**
 ```
-tmemro: mapping read-only page at va=0x40000000
-tmemro: map_ro returned 0 (success)
-tmemro: reading from RO page: "Hola desde el kernel xv6 - pagina solo lectura"
+memro: mapping read-only page at va=0x40000000
+memro: map_ro returned 0 (success)
+memro: reading from RO page: "Hola desde el kernel xv6 - pagina solo lectura"
 
-tmemro: now attempting WRITE to read-only page...
-tmemro: this should trigger a store page fault (scause=15)
+memro: now attempting WRITE to read-only page...
+memro: this should trigger a store page fault (scause=15)
 [trap] pid 3: store page fault at va=0x40000000
 ```
 
@@ -213,9 +213,9 @@ mappages(p->pagetable, va, PGSIZE, (uint64)mem, PTE_R | PTE_U);
 
 ---
 
-### `tuargs` — Robustez de argumentos
+### `uargs` — Robustez de argumentos
 
-**Archivo:** [`user/tuargs.c`](user/tuargs.c)  
+**Archivo:** [`user/uargs.c`](user/uargs.c)  
 **Syscalls usadas:** `hello()`, `write()`, `read()`, `open()`, `trace()`
 
 **Que hace:**  
@@ -232,7 +232,7 @@ Usa `trace()` para imprimir los argumentos crudos del trapframe en cada syscall.
 
 **Salida esperada:**
 ```
-=== tuargs: syscall argument robustness test ===
+=== uargs: syscall argument robustness test ===
 
 --- Test 1: hello() ---
 hello: greetings from the xv6 kernel!
@@ -251,7 +251,7 @@ read(99) returned: -1 (expected -1)
 [trace] pid 3: syscall open (num=15) args=(...) -> -1
 open(0xdeadbeef) returned: -1 (expected -1)
 
-=== tuargs: all tests completed without kernel panic ===
+=== uargs: all tests completed without kernel panic ===
 ```
 
 **Concepto demostrado:** `copyin`/`copyout` validan punteros de usuario, `fileread`/`filewrite` validan file descriptors. El kernel nunca hace panic por argumentos invalidos de user space.
@@ -311,11 +311,11 @@ HIJO (4) lee: Hola
 
 | Archivo | Descripcion |
 |---------|-------------|
-| [`user/thello.c`](user/thello.c) | Comando 1: prueba syscall hello |
-| [`user/ttrace.c`](user/ttrace.c) | Comando 2: trazador de syscalls |
-| [`user/tdumpvm.c`](user/tdumpvm.c) | Comando 3: dump de page table |
-| [`user/tmemro.c`](user/tmemro.c) | Comando 4: pagina read-only + page fault |
-| [`user/tuargs.c`](user/tuargs.c) | Comando 5: robustez de argumentos |
+| [`user/hello.c`](user/hello.c) | Comando 1: prueba syscall hello |
+| [`user/trace.c`](user/trace.c) | Comando 2: trazador de syscalls |
+| [`user/dumpvm.c`](user/dumpvm.c) | Comando 3: dump de page table |
+| [`user/memro.c`](user/memro.c) | Comando 4: pagina read-only + page fault |
+| [`user/uargs.c`](user/uargs.c) | Comando 5: robustez de argumentos |
 | [`user/sharedtest.c`](user/sharedtest.c) | Prueba de memoria compartida |
 | [`user/user.h`](user/user.h) | Prototipos de syscalls nuevas |
 | [`user/usys.pl`](user/usys.pl) | Generacion de stubs |

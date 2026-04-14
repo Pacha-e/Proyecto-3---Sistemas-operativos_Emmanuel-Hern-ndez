@@ -5,8 +5,8 @@
 int
 main(void)
 {
-  printf("thello: calling syscall hello()...\n");
+  printf("hello: calling syscall hello()...\n");
   int ret = hello();
-  printf("thello: hello() returned %d\n", ret);
+  printf("hello: hello() returned %d\n", ret);
   exit(0);
 }
