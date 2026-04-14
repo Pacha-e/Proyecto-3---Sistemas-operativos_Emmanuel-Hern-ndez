@@ -50,7 +50,7 @@ Dentro de la shell de xv6:
 
 ```
 $ hello
-$ trace 134217728 hello
+$ trace hello hello
 $ dumpvm
 $ memro
 $ uargs
@@ -100,12 +100,14 @@ Guarda una bitmask en `struct proc`. Cada vez que el proceso (o sus hijos via `f
 
 **Uso:**
 ```
-$ trace <mask> <comando> [args...]
+$ trace <syscall> <comando> [args...]
 ```
 
-**Ejemplo — trazar `hello` (bit 27 = `1 << 27 = 134217728`):**
+Se puede usar el **nombre** de la syscall o un numero de mascara:
+
+**Ejemplo — trazar `hello` por nombre:**
 ```
-$ trace 134217728 hello
+$ trace hello hello
 ```
 
 **Salida esperada:**
@@ -116,9 +118,9 @@ hello: greetings from the xv6 kernel!
 hello: hello() returned 42
 ```
 
-**Ejemplo — trazar `write` (bit 16 = `1 << 16 = 65536`):**
+**Ejemplo — trazar `write`:**
 ```
-$ trace 65536 echo hola
+$ trace write echo hola
 ```
 
 **Implementacion clave** ([`kernel/syscall.c:195`](kernel/syscall.c)):
