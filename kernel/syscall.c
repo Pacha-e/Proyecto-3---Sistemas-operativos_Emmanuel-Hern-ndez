@@ -193,7 +193,7 @@ syscall(void)
 
     // Tracing: if this syscall is in the trace mask, print info
     if(p->trace_mask & (1 << num)) {
-      printf("[trace] pid %d: syscall %s (num=%d) args=(%p, %p, %p, %p, %p, %p) -> %d\n",
+      printf("[trace] pid %d: syscall %s (num=%d) args=(%ld, %ld, %ld, %ld, %ld, %ld) -> %ld\n",
         p->pid,
         (num < NELEM(syscall_names) && syscall_names[num]) ? syscall_names[num] : "?",
         num,
