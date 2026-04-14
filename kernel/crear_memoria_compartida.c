@@ -25,9 +25,10 @@ crear_memoria_compartida(struct proc *p, struct proc *np)
             return -1;
         }
         memset(shared_page, 0, PGSIZE);
+        refcount = 2;  // padre + hijo
+    } else {
+        refcount++;
     }
-
-    refcount++;
 
     release(&shm_lock);
 

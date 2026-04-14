@@ -165,13 +165,13 @@ freeproc(struct proc *p)
   p->trapframe = 0;
 if(p->pagetable){
 
-  if(p->usar_memoria_compartida){
+  if(p->usar_memoria_compartida && p->shm_va != 0){
 
     acquire(&shm_lock);
 
     refcount--;
 
-    // usar la dirección del proceso
+    // desmapear sin liberar la pagina fisica (do_free=0)
     uvmunmap(p->pagetable, p->shm_va, 1, 0);
 
     if(refcount == 0){
@@ -182,7 +182,7 @@ if(p->pagetable){
     release(&shm_lock);
   }
 
-  // Unmap read-only page from map_ro syscall
+  // limpiar la pagina de solo lectura si se mapeo con map_ro
   if(p->map_ro_va){
     uvmunmap(p->pagetable, p->map_ro_va, 1, 1);
     p->map_ro_va = 0;

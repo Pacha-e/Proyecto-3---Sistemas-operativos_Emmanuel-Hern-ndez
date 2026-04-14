@@ -90,8 +90,8 @@ struct proc {
 
   uint64 shm_va;   // dirección virtual de memoria compartida
   int usar_memoria_compartida;
-  int trace_mask;  // bitmask for syscall tracing
-  uint64 map_ro_va; // VA of read-only mapped page (0 if none)
+  int trace_mask;  // mascara de bits para rastreo de syscalls
+  uint64 map_ro_va; // direccion virtual de la pagina read-only (0 si no hay)
 
   // p->lock must be held when using these:
   enum procstate state;        // Process state

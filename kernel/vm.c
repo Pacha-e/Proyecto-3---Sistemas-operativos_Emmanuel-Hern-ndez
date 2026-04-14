@@ -487,7 +487,7 @@ ismapped(pagetable_t pagetable, uint64 va)
   return 0;
 }
 
-// Print a page table, walking the three-level Sv39 structure.
+// Recorre e imprime la page table Sv39 de 3 niveles
 void
 vmprint(pagetable_t pagetable)
 {

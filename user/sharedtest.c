@@ -16,33 +16,28 @@ main(void)
     }
 
     if(pid > 0){
-        // 🔴 PADRE
-
+        // PADRE: escribe en memoria compartida
         mem[0] = 'H';
         mem[1] = 'o';
         mem[2] = 'l';
         mem[3] = 'a';
         mem[4] = '\0';
 
- 	printf("PADRE (%d) addr: %p\n", getpid(), mem);
-        printf("PADRE (%d) escribió: %s\n", getpid(), mem);
-        // espera a que el hijo termine COMPLETAMENTE
+        printf("PADRE (%d) addr: %p\n", getpid(), mem);
+        printf("PADRE (%d) escribio: %s\n", getpid(), mem);
+
+        // espera a que el hijo termine
         wait(&tiempo);
 
-        // prints después del wait (sin solaparse)
-        printf("PADRE (%d) addr: %p\n", getpid(), mem);
-        printf("PADRE (%d) escribió: %s\n", getpid(), mem);
+        // despues del wait, la pagina sigue viva (refcount > 0)
+        printf("PADRE (%d) despues de wait: %s\n", getpid(), mem);
 
     } else {
-        // 🔵 HIJO
+        // HIJO: esperar a que el padre escriba
+        pause(2);
 
         printf("HIJO (%d) addr: %p\n", getpid(), mem);
         printf("HIJO (%d) lee: %s\n", getpid(), mem);
-    }
-
-    //  esto se ejecuta en ambos, pero ahora sin conflicto
-    if(pid > 0){
-        printf("PADRE (%d) final: %s (addr: %p)\n", getpid(), mem, mem);
     }
 
     exit(0);

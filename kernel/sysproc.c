@@ -171,9 +171,10 @@ sys_getshm(void)
 }
 
 // ==========================================
-// Proyecto 2: Comandos EAFITos
+// Proyecto 2 - Syscalls nuevas
 // ==========================================
 
+// Syscall basica: imprime saludo y retorna 42
 uint64
 sys_hello(void)
 {
@@ -181,6 +182,7 @@ sys_hello(void)
   return 42;
 }
 
+// Guarda la mascara de rastreo en el proceso actual
 uint64
 sys_trace(void)
 {
@@ -190,6 +192,7 @@ sys_trace(void)
   return 0;
 }
 
+// Imprime la page table del proceso
 uint64
 sys_dumpvm(void)
 {
@@ -199,6 +202,8 @@ sys_dumpvm(void)
   return 0;
 }
 
+// Mapea una pagina de solo lectura en la VA que pide el usuario.
+// Si intenta escribir -> store page fault (scause=15)
 uint64
 sys_map_ro(void)
 {
@@ -206,23 +211,25 @@ sys_map_ro(void)
   argaddr(0, &va);
   struct proc *p = myproc();
 
-  va = PGROUNDDOWN(va);
+  va = PGROUNDDOWN(va);  // alinear a pagina
 
   if(ismapped(p->pagetable, va))
-    return -1;
+    return -1;  // ya hay algo ahi
 
   char *mem = kalloc();
   if(mem == 0)
     return -1;
   memset(mem, 0, PGSIZE);
 
+  // escribo un mensaje para que el usuario lo pueda leer
   char *msg = "Hola desde el kernel xv6 - pagina solo lectura";
   memmove(mem, msg, strlen(msg) + 1);
 
+  // mapeo sin PTE_W -> no se puede escribir
   if(mappages(p->pagetable, va, PGSIZE, (uint64)mem, PTE_R | PTE_U) != 0) {
     kfree(mem);
     return -1;
   }
-  p->map_ro_va = va;
+  p->map_ro_va = va;  // guardar para limpiar en freeproc
   return 0;
 }

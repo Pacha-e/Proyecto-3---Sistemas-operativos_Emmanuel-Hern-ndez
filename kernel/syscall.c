@@ -144,7 +144,7 @@ static uint64 (*syscalls[])(void) = {
 [SYS_map_ro] sys_map_ro,
 };
 
-// Syscall names for tracing
+// Nombres de syscalls (para imprimir en el trace)
 static char *syscall_names[] = {
 [0]             "(none)",
 [SYS_fork]      "fork",
@@ -191,7 +191,7 @@ syscall(void)
     // and store its return value in p->trapframe->a0
     p->trapframe->a0 = syscalls[num]();
 
-    // Tracing: if this syscall is in the trace mask, print info
+    // si la syscall esta en la mascara de trace, imprimir info
     if(p->trace_mask & (1 << num)) {
       printf("[trace] pid %d: syscall %s (num=%d) args=(%ld, %ld, %ld, %ld, %ld, %ld) -> %ld\n",
         p->pid,

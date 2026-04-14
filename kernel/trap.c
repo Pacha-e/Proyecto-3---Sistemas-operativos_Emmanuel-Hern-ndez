@@ -62,7 +62,7 @@ usertrap(void)
     // but we want to return to the next instruction.
     p->trapframe->epc += 4;
 
-    // Debug print for custom syscalls
+    // imprimir info de debug para las syscalls del proyecto
     int sysnum = p->trapframe->a7;
     if(sysnum >= SYS_hello) {
       printf("[trap] pid %d: ecall from U-mode, scause=8, sepc=0x%lx, syscall=%d\n",
