@@ -78,13 +78,30 @@ usertrap(void)
     // ok
   } else if(r_scause() == 15 || r_scause() == 13) {
     uint64 va = r_stval();
-    uint64 result = vmfault(p->pagetable, va, (r_scause() == 13) ? 1 : 0);
-    if(result == 0) {
-      printf("[trap] pid %d: %s page fault at va=0x%lx, scause=%ld - killing process\n",
-        p->pid,
-        (r_scause() == 15) ? "store" : "load",
-        va, r_scause());
+    uint64 scause = r_scause();
+    printf("page fault: pid=%d scause=%ld stval=0x%lx\n", p->pid, scause, va);
+    if(p->vr.active && va >= p->vr.start && va < p->vr.start + (uint64)p->vr.size) {
+      uint64 pa = (uint64)kalloc();
+      if(pa == 0) {
+        setkilled(p);
+      } else {
+        memset((void*)pa, 'A', PGSIZE);
+        if(mappages(p->pagetable, PGROUNDDOWN(va), PGSIZE, pa, PTE_W|PTE_R|PTE_U) != 0) {
+          kfree((void*)pa);
+          setkilled(p);
+        } else {
+          p->pagefault_count++;
+        }
+      }
+    } else if(va == 0 || va >= p->sz) {
       setkilled(p);
+    } else {
+      uint64 result = vmfault(p->pagetable, va, (scause == 13) ? 1 : 0);
+      if(result == 0) {
+        setkilled(p);
+      } else {
+        p->pagefault_count++;
+      }
     }
   } else {
     printf("usertrap(): unexpected scause 0x%lx pid=%d\n", r_scause(), p->pid);

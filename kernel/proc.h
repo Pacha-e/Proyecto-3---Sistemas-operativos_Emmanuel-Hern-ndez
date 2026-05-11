@@ -84,6 +84,13 @@ struct trapframe {
 
 enum procstate { UNUSED, USED, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 
+// Región virtual reservada por mapzero (sin respaldo físico hasta fault)
+struct vregion {
+  uint64 start;
+  int    size;    // bytes, siempre múltiplo de PGSIZE
+  int    active;  // 1 si hay región activa
+};
+
 // Per-process state
 struct proc {
   struct spinlock lock;
@@ -112,6 +119,8 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
+  int pagefault_count;         // lazy faults resueltos exitosamente
+  struct vregion vr;           // región mapzero activa
 };
 
 #endif

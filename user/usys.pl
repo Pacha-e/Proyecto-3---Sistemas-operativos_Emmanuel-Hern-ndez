@@ -51,3 +51,4 @@ entry("hello");
 entry("trace");
 entry("dumpvm");
 entry("map_ro");
+entry("mapzero");

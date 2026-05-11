@@ -40,27 +40,15 @@ sys_wait(void)
 uint64
 sys_sbrk(void)
 {
-  uint64 addr;
-  int t;
   int n;
-
   argint(0, &n);
-  argint(1, &t);
-  addr = myproc()->sz;
-
-  if(t == SBRK_EAGER || n < 0) {
-    if(growproc(n) < 0) {
-      return -1;
-    }
-  } else {
-    // Lazily allocate memory for this process: increase its memory
-    // size but don't allocate memory. If the processes uses the
-    // memory, vmfault() will allocate it.
-    if(addr + n < addr)
-      return -1;
-    if(addr + n > TRAPFRAME)
-      return -1;
-    myproc()->sz += n;
+  struct proc *p = myproc();
+  uint64 addr = p->sz;
+  if(n > 0) {
+    if(addr + n < addr || addr + (uint64)n > TRAPFRAME) return -1;
+    p->sz += n;
+  } else if(n < 0) {
+    if(growproc(n) < 0) return -1;
   }
   return addr;
 }
@@ -232,4 +220,19 @@ sys_map_ro(void)
   }
   p->map_ro_va = va;  // guardar para limpiar en freeproc
   return 0;
+}
+
+uint64
+sys_mapzero(void)
+{
+  int size;
+  argint(0, &size);
+  if(size <= 0) return -1;
+  struct proc *p = myproc();
+  uint64 aligned = PGROUNDUP((uint64)size);
+  p->vr.start  = p->sz;
+  p->vr.size   = (int)aligned;
+  p->vr.active = 1;
+  p->sz       += aligned;
+  return (int64)p->vr.start;
 }

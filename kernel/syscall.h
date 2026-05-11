@@ -29,3 +29,4 @@
 #define SYS_trace  28
 #define SYS_dumpvm 29
 #define SYS_map_ro 30
+#define SYS_mapzero  31

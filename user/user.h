@@ -21,7 +21,7 @@ int mkdir(const char*);
 int chdir(const char*);
 int dup(int);
 int getpid(void);
-char* sys_sbrk(int,int);
+char* sys_sbrk(int);
 int pause(int);
 int uptime(void);
 struct rtcdate;
@@ -34,6 +34,7 @@ int hello(void);
 int trace(int);
 int dumpvm(void);
 int map_ro(void*);
+int mapzero(int);
 
 // ulib.c
 int stat(const char*, struct stat*);

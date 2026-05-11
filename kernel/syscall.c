@@ -109,6 +109,7 @@ extern uint64 sys_hello(void);
 extern uint64 sys_trace(void);
 extern uint64 sys_dumpvm(void);
 extern uint64 sys_map_ro(void);
+extern uint64 sys_mapzero(void);
 
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.
@@ -142,6 +143,7 @@ static uint64 (*syscalls[])(void) = {
 [SYS_trace]  sys_trace,
 [SYS_dumpvm] sys_dumpvm,
 [SYS_map_ro] sys_map_ro,
+[SYS_mapzero] sys_mapzero,
 };
 
 // Nombres de syscalls (para imprimir en el trace)
@@ -177,6 +179,7 @@ static char *syscall_names[] = {
 [SYS_trace]     "trace",
 [SYS_dumpvm]    "dumpvm",
 [SYS_map_ro]    "map_ro",
+[SYS_mapzero]   "mapzero",
 };
 
 void

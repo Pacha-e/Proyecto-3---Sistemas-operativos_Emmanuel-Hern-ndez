@@ -151,6 +151,11 @@ found:
   p->context.ra = (uint64)forkret;
   p->context.sp = p->kstack + PGSIZE;
 
+  p->pagefault_count = 0;
+  p->vr.start  = 0;
+  p->vr.size   = 0;
+  p->vr.active = 0;
+
   return p;
 }
 
@@ -188,6 +193,17 @@ if(p->pagetable){
     p->map_ro_va = 0;
   }
 
+  // limpiar páginas ya mapeadas de la región mapzero
+  if(p->vr.active && p->pagetable) {
+    uint64 va;
+    for(va = p->vr.start; va < p->vr.start + (uint64)p->vr.size; va += PGSIZE) {
+      pte_t *pte = walk(p->pagetable, va, 0);
+      if(pte && (*pte & PTE_V))
+        uvmunmap(p->pagetable, va, 1, 1);
+    }
+    p->vr.active = 0;
+  }
+
   proc_freepagetable(p->pagetable, p->sz);
 }
 
@@ -202,6 +218,10 @@ if(p->pagetable){
   p->usar_memoria_compartida = 0;
   p->shm_va = 0;
   p->trace_mask = 0;
+  p->pagefault_count = 0;
+  p->vr.start  = 0;
+  p->vr.size   = 0;
+  p->vr.active = 0;
   p->state = UNUSED;
 }
 

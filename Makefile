@@ -159,6 +159,9 @@ UPROGS=\
 	$U/_dumpvm\
 	$U/_memro\
 	$U/_uargs\
+	$U/_tpf\
+	$U/_tlazy\
+	$U/_tmmap_sim\
 
 
 fs.img: mkfs/mkfs README.md $(UPROGS)
