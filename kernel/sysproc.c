@@ -234,5 +234,5 @@ sys_mapzero(void)
   p->vr.size   = (int)aligned;
   p->vr.active = 1;
   p->sz       += aligned;
-  return (int64)p->vr.start;
+  return p->vr.start;
 }
